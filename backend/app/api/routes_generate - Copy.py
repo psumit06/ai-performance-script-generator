@@ -1,22 +1,79 @@
-import json
+from unittest import result
 
-from fastapi import (
-    APIRouter,
-    UploadFile,
-    File
-)
+from fastapi import APIRouter
 
-from fastapi.responses import FileResponse
-
+from app.models.request_models import GenerateRequest
+from app.services.xml_validator import validate_xml
 from app.services.parser_router import parse_api_spec
 from app.services.correlation_engine import detect_patterns
 from app.services.prompt_engine import build_prompt
 from app.services.llm_engine import LLMEngine
-from app.services.jmx_builder import build_jmx
-from app.services.xml_validator import validate_xml
+from fastapi import APIRouter, UploadFile, File
+from fastapi.responses import FileResponse
+from app.services.xml_cleaner import clean_ai_xml
 
 router = APIRouter()
 
+
+@router.post("/generate")
+def generate(req: GenerateRequest):
+
+    try:
+
+        # STEP 1 — Parse incoming API specification
+        parsed_apis = parse_api_spec(
+            req.api_spec
+        )
+
+        print("PARSED APIS:")
+        print(parsed_apis)
+
+        # STEP 2 — Detect patterns for correlation
+        patterns = detect_patterns(
+            parsed_apis
+        )
+
+        print("DETECTED PATTERNS:")
+        print(patterns)
+
+        # STEP 3 — Build structured AI prompt
+        prompt = build_prompt(
+            parsed_apis=parsed_apis,
+            config=req.config,
+            patterns=patterns
+        )
+
+        print("PROMPT GENERATED")
+
+        # STEP 4 — Generate AI response
+        llm = LLMEngine()
+
+        result = llm.generate(
+            provider=req.provider,
+            prompt=prompt
+        )
+        
+
+        print("AI RESPONSE RECEIVED")
+
+        # STEP 5 — Return response
+        cleaned_result = clean_ai_xml(result)
+        validation = validate_xml(cleaned_result)
+        #print("XML VALIDATION RESULT:", validation)
+
+        return {
+            "response": cleaned_result,
+            "validation": validation
+        }
+
+    except Exception as e:
+
+        print("ERROR:")
+        print(str(e))
+
+        return {
+            "error": str(e)
+        }
 
 @router.post("/generate-from-file")
 async def generate_from_file(
@@ -55,7 +112,7 @@ async def generate_from_file(
         print("PATTERNS:")
         print(patterns)
 
-        # Config object
+        # Create config object
         class Config:
             pass
 
@@ -66,14 +123,12 @@ async def generate_from_file(
         config.duration = duration
         config.think_time = think_time
 
-        # Build AI prompt
+        # Build prompt
         prompt = build_prompt(
             parsed_apis,
             config,
             patterns
         )
-
-        print("PROMPT GENERATED")
 
         # Generate AI response
         llm = LLMEngine()
@@ -86,29 +141,9 @@ async def generate_from_file(
         print("RAW AI RESPONSE:")
         print(result)
 
-        # Parse AI JSON response
-        test_plan = json.loads(result)
-
-        print("STRUCTURED TEST PLAN:")
-        print(test_plan)
-
-        # Build deterministic JMX
-        jmx_content = build_jmx(
-            test_plan
-        )
-
-        print("JMX GENERATED")
-
-        # Validate generated XML
-        print("GENERATED JMX:")
-        print(jmx_content)
-
-        validation = validate_xml(
-            jmx_content
-        )
-
-        print("VALIDATION RESULT:")
-        print(validation)
+        # Validate XML
+        cleaned_result = clean_ai_xml(result)
+        validation = validate_xml(cleaned_result)
 
         if not validation["valid"]:
 
@@ -120,13 +155,9 @@ async def generate_from_file(
         # Save JMX file
         output_path = "output/generated_test_plan.jmx"
 
-        with open(
-            output_path,
-            "w",
-            encoding="utf-8"
-        ) as f:
+        with open(output_path, "w", encoding="utf-8") as f:
 
-            f.write(jmx_content)
+            f.write(cleaned_result)
 
         print("JMX FILE SAVED")
 

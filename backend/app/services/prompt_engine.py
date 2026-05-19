@@ -1,7 +1,19 @@
+import json
+
+
 def build_prompt(parsed_apis, config, patterns):
 
     prompt = f"""
-Generate a production-ready JMeter JMX XML test plan.
+You are an expert JMeter performance testing engineer.
+
+Your task is to analyze API endpoints and generate a structured JSON test plan.
+
+IMPORTANT RULES:
+- Return ONLY valid JSON
+- Do NOT return XML
+- Do NOT return markdown
+- Do NOT add explanations
+- Response must be parseable using json.loads()
 
 Load Configuration:
 - Users: {config.users}
@@ -9,28 +21,47 @@ Load Configuration:
 - Duration: {config.duration}
 - Think Time: {config.think_time}
 
-Requirements:
-- Add HTTP Request samplers
-- Add Assertions
-- Use Transaction Controllers
-- Add realistic naming
+Testing Requirements:
+- Generate realistic API test flow
+- Preserve request sequence
+- Include all endpoints
+- Preserve headers
+- Preserve request payloads
+- Use ${{username}} and ${{password}} variables
+- Use ${{jwt_token}} for protected APIs
+- Add assert_response for important APIs
+- Login/auth APIs should extract tokens
 """
 
-    # Correlation instructions
     if patterns["jwt"]:
-        prompt += "\n- Add JWT token correlation using JSON Extractor"
+
+        prompt += """
+- APIs use JWT authentication
+- Protected APIs must reuse extracted JWT token
+"""
 
     if patterns["auth"]:
-        prompt += "\n- Handle Authorization headers correctly"
+
+        prompt += """
+- Preserve Authorization headers
+"""
 
     if patterns["session"]:
-        prompt += "\n- Add session handling"
+
+        prompt += """
+- Preserve session continuity
+"""
 
     if patterns["cookie"]:
-        prompt += "\n- Add Cookie Manager"
 
-    # Endpoint details
-    prompt += "\n\nAPI Endpoints:\n"
+        prompt += """
+- Preserve cookies across requests
+"""
+
+    prompt += """
+
+API ENDPOINTS:
+"""
 
     for ep in parsed_apis["endpoints"]:
 
@@ -38,34 +69,83 @@ Requirements:
 
 ----------------------------------------
 Endpoint Name: {ep['name']}
+
 Method: {ep['method']}
+
 URL: {ep['url']}
 """
 
-        # Headers
         if ep["headers"]:
 
             prompt += "\nHeaders:\n"
 
             for header in ep["headers"]:
 
-                key = header.get("key", "")
+                key = header.get("key", "") or header.get("name", "")
                 value = header.get("value", "")
 
                 prompt += f"- {key}: {value}\n"
 
-        # Body
         if ep["body"]:
 
-            prompt += f"\nBody:\n{ep['body']}\n"
+            prompt += f"""
 
-    # Final instructions
-    prompt += """
+Body:
+{json.dumps(ep["body"], indent=2)}
+"""
 
-Output Rules:
-- Return ONLY valid JMX XML
-- Do not return markdown
-- Ensure XML is importable into JMeter
+    prompt += f"""
+
+RETURN JSON IN THIS EXACT FORMAT:
+
+{{
+  "thread_group": {{
+    "users": {config.users},
+    "ramp_up": {config.ramp_up},
+    "duration": {config.duration},
+    "think_time": {config.think_time}
+  }},
+
+  "requests": [
+    {{
+      "name": "Login API",
+
+      "method": "POST",
+
+      "url": "https://api.example.com/login",
+
+      "headers": {{
+        "Content-Type": "application/json"
+      }},
+
+      "body": {{
+        "username": "${{username}}",
+        "password": "${{password}}"
+      }},
+
+      "extract_token": true,
+
+      "assert_response": "success"
+    }},
+
+    {{
+      "name": "Get Profile",
+
+      "method": "GET",
+
+      "url": "https://api.example.com/profile",
+
+      "headers": {{
+        "Authorization": "Bearer ${{jwt_token}}"
+      }}
+    }}
+  ]
+}}
+
+IMPORTANT:
+- Return ONLY valid JSON
+- No markdown
+- No explanations
 """
 
     return prompt
