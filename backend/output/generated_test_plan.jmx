@@ -21,7 +21,7 @@ elementType="LoopController"
 guiclass="LoopControlPanel"
 testclass="LoopController"
 enabled="true">
-<boolProp name="LoopController.continue_forever">false</boolProp><stringProp name="LoopController.loops">1</stringProp></elementProp><stringProp name="ThreadGroup.num_threads">10</stringProp><stringProp name="ThreadGroup.ramp_time">200</stringProp><boolProp name="ThreadGroup.scheduler">false</boolProp></ThreadGroup><hashTree>
+<boolProp name="LoopController.continue_forever">false</boolProp><stringProp name="LoopController.loops">1</stringProp></elementProp><stringProp name="ThreadGroup.num_threads">10</stringProp><stringProp name="ThreadGroup.ramp_time">100</stringProp><boolProp name="ThreadGroup.scheduler">false</boolProp></ThreadGroup><hashTree>
 <CSVDataSet guiclass="TestBeanGUI"
 testclass="CSVDataSet"
 testname="CSV User Data"
@@ -70,6 +70,38 @@ false
 
 </CookieManager>
 <hashTree/>
+<TransactionController guiclass="TransactionControllerGui"
+testclass="TransactionController"
+testname="Login Flow"
+enabled="true">
+
+<boolProp name="TransactionController.includeTimers">
+false
+</boolProp>
+
+<boolProp name="TransactionController.parent">
+false
+</boolProp>
+
+</TransactionController>
+<hashTree>
+<ThroughputController guiclass="ThroughputControllerGui"
+testclass="ThroughputController"
+testname="Throughput Controller"
+enabled="true">
+
+<intProp name="ThroughputController.style">1</intProp>
+
+<boolProp name="ThroughputController.perThread">
+false
+</boolProp>
+
+<stringProp name="ThroughputController.percentThroughput">
+20
+</stringProp>
+
+</ThroughputController>
+<hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui"
 testclass="HTTPSamplerProxy"
 testname="Login API"
@@ -187,7 +219,7 @@ testclass="ConstantTimer"
 testname="Think Time"
 enabled="true">
 
-<stringProp name="ConstantTimer.delay">4000</stringProp>
+<stringProp name="ConstantTimer.delay">5688</stringProp>
 
 </ConstantTimer>
 
@@ -195,9 +227,45 @@ enabled="true">
 
 </hashTree>
 
+</hashTree>
+
+</hashTree>
+
+<TransactionController guiclass="TransactionControllerGui"
+testclass="TransactionController"
+testname="CDPH-SFTP-SAPI Flow"
+enabled="true">
+
+<boolProp name="TransactionController.includeTimers">
+false
+</boolProp>
+
+<boolProp name="TransactionController.parent">
+false
+</boolProp>
+
+</TransactionController>
+<hashTree>
+<ThroughputController guiclass="ThroughputControllerGui"
+testclass="ThroughputController"
+testname="Throughput Controller"
+enabled="true">
+
+<intProp name="ThroughputController.style">1</intProp>
+
+<boolProp name="ThroughputController.perThread">
+false
+</boolProp>
+
+<stringProp name="ThroughputController.percentThroughput">
+40
+</stringProp>
+
+</ThroughputController>
+<hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui"
 testclass="HTTPSamplerProxy"
-testname="Get Profile"
+testname="CDPH-SFTP-SAPI API"
 enabled="true">
 
 <elementProp name="HTTPsampler.Arguments"
@@ -226,7 +294,7 @@ elementType="HTTPArgument">
 
 <stringProp name="HTTPSampler.protocol">https</stringProp>
 
-<stringProp name="HTTPSampler.path">/profile</stringProp>
+<stringProp name="HTTPSampler.path">/cdph-sftp-sapi</stringProp>
 
 <stringProp name="HTTPSampler.method">GET</stringProp>
 
@@ -262,16 +330,190 @@ elementType="Header">
 
 <hashTree/>
 
+<ResponseAssertion guiclass="AssertionGui"
+testclass="ResponseAssertion"
+testname="Response Assertion"
+enabled="true">
+
+<collectionProp name="Asserion.test_strings">
+
+<stringProp name="0">
+success
+</stringProp>
+
+</collectionProp>
+
+<stringProp name="Assertion.test_field">
+Assertion.response_data
+</stringProp>
+
+<boolProp name="Assertion.assume_success">
+false
+</boolProp>
+
+<intProp name="Assertion.test_type">2</intProp>
+
+</ResponseAssertion>
+
+<hashTree/>
+
 <ConstantTimer guiclass="ConstantTimerGui"
 testclass="ConstantTimer"
 testname="Think Time"
 enabled="true">
 
-<stringProp name="ConstantTimer.delay">4000</stringProp>
+<stringProp name="ConstantTimer.delay">5688</stringProp>
 
 </ConstantTimer>
 
 <hashTree/>
+
+</hashTree>
+
+</hashTree>
+
+</hashTree>
+
+<TransactionController guiclass="TransactionControllerGui"
+testclass="TransactionController"
+testname="ResultStoreSAPI Flow"
+enabled="true">
+
+<boolProp name="TransactionController.includeTimers">
+false
+</boolProp>
+
+<boolProp name="TransactionController.parent">
+false
+</boolProp>
+
+</TransactionController>
+<hashTree>
+<ThroughputController guiclass="ThroughputControllerGui"
+testclass="ThroughputController"
+testname="Throughput Controller"
+enabled="true">
+
+<intProp name="ThroughputController.style">1</intProp>
+
+<boolProp name="ThroughputController.perThread">
+false
+</boolProp>
+
+<stringProp name="ThroughputController.percentThroughput">
+40
+</stringProp>
+
+</ThroughputController>
+<hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui"
+testclass="HTTPSamplerProxy"
+testname="ResultStoreSAPI API"
+enabled="true">
+
+<elementProp name="HTTPsampler.Arguments"
+elementType="Arguments">
+
+<collectionProp name="Arguments.arguments">
+
+<elementProp name=""
+elementType="HTTPArgument">
+
+<boolProp name="HTTPArgument.always_encode">false</boolProp>
+
+<stringProp name="Argument.value">{}</stringProp>
+
+<stringProp name="Argument.metadata">=</stringProp>
+
+</elementProp>
+
+</collectionProp>
+
+</elementProp>
+
+<stringProp name="HTTPSampler.domain">api.example.com</stringProp>
+
+<stringProp name="HTTPSampler.port"></stringProp>
+
+<stringProp name="HTTPSampler.protocol">https</stringProp>
+
+<stringProp name="HTTPSampler.path">/result-store-sapi</stringProp>
+
+<stringProp name="HTTPSampler.method">GET</stringProp>
+
+<boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+
+<boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+
+<boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+
+</HTTPSamplerProxy>
+
+<hashTree>
+
+<HeaderManager guiclass="HeaderPanel"
+testclass="HeaderManager"
+testname="HTTP Header Manager"
+enabled="true">
+
+<collectionProp name="HeaderManager.headers">
+
+<elementProp name=""
+elementType="Header">
+
+<stringProp name="Header.name">Authorization</stringProp>
+
+<stringProp name="Header.value">Bearer ${jwt_token}</stringProp>
+
+</elementProp>
+
+</collectionProp>
+
+</HeaderManager>
+
+<hashTree/>
+
+<ResponseAssertion guiclass="AssertionGui"
+testclass="ResponseAssertion"
+testname="Response Assertion"
+enabled="true">
+
+<collectionProp name="Asserion.test_strings">
+
+<stringProp name="0">
+success
+</stringProp>
+
+</collectionProp>
+
+<stringProp name="Assertion.test_field">
+Assertion.response_data
+</stringProp>
+
+<boolProp name="Assertion.assume_success">
+false
+</boolProp>
+
+<intProp name="Assertion.test_type">2</intProp>
+
+</ResponseAssertion>
+
+<hashTree/>
+
+<ConstantTimer guiclass="ConstantTimerGui"
+testclass="ConstantTimer"
+testname="Think Time"
+enabled="true">
+
+<stringProp name="ConstantTimer.delay">5688</stringProp>
+
+</ConstantTimer>
+
+<hashTree/>
+
+</hashTree>
+
+</hashTree>
 
 </hashTree>
 

@@ -9,13 +9,38 @@ from fastapi import (
 from fastapi.responses import FileResponse
 
 from app.services.parser_router import parse_api_spec
-from app.services.correlation_engine import detect_patterns
-from app.services.prompt_engine import build_prompt
-from app.services.llm_engine import LLMEngine
-from app.services.jmx_builder import build_jmx
-from app.services.xml_validator import validate_xml
+
+from app.services.correlation_engine import (
+    detect_patterns
+)
+
+from app.services.prompt_engine import (
+    build_prompt
+)
+
+from app.services.llm_engine import (
+    LLMEngine
+)
+
+from app.services.jmx_builder import (
+    build_jmx
+)
+
+from app.services.xml_validator import (
+    validate_xml
+)
+
 from app.services.response_cleaner import (
     clean_llm_response
+)
+
+# DAY 12 IMPORTS
+from app.services.api_diff_engine import (
+    compare_apis
+)
+
+from app.services.test_plan_metadata import (
+    build_test_plan_metadata
 )
 
 router = APIRouter()
@@ -25,40 +50,94 @@ router = APIRouter()
 async def generate_from_file(
 
     provider: str,
+
     users: int,
+
     ramp_up: int,
+
     duration: int,
+
     think_time: int,
+
     file: UploadFile = File(...)
 
 ):
 
     try:
 
-        # Read uploaded file
+        # =========================
+        # READ UPLOADED FILE
+        # =========================
+
         raw_content = await file.read()
 
-        raw_content = raw_content.decode("utf-8")
+        raw_content = raw_content.decode(
+            "utf-8"
+        )
 
+        print("\n====================")
         print("FILE RECEIVED")
+        print("====================\n")
 
-        # Parse APIs
+        # =========================
+        # PARSE APIs
+        # =========================
+
         parsed_apis = parse_api_spec(
             raw_content
         )
 
-        print("PARSED APIS:")
-        print(parsed_apis)
+        print("\n====================")
+        print("PARSED APIS")
+        print("====================\n")
 
-        # Detect patterns
+        print(
+            json.dumps(
+                parsed_apis,
+                indent=2
+            )
+        )
+
+        # =========================
+        # DETECT PATTERNS
+        # =========================
+
         patterns = detect_patterns(
             parsed_apis
         )
 
-        print("PATTERNS:")
-        print(patterns)
+        print("\n====================")
+        print("PATTERNS")
+        print("====================\n")
 
-        # Config object
+        print(
+            json.dumps(
+                patterns,
+                indent=2
+            )
+        )
+
+        # =========================
+        # DAY 12 METADATA
+        # =========================
+
+        metadata = build_test_plan_metadata()
+
+        print("\n====================")
+        print("TEST PLAN METADATA")
+        print("====================\n")
+
+        print(
+            json.dumps(
+                metadata,
+                indent=2
+            )
+        )
+
+        # =========================
+        # CONFIG OBJECT
+        # =========================
+
         class Config:
             pass
 
@@ -69,16 +148,24 @@ async def generate_from_file(
         config.duration = duration
         config.think_time = think_time
 
-        # Build AI prompt
+        # =========================
+        # BUILD AI PROMPT
+        # =========================
+
         prompt = build_prompt(
             parsed_apis,
             config,
             patterns
         )
 
+        print("\n====================")
         print("PROMPT GENERATED")
+        print("====================\n")
 
-        # Generate AI response
+        # =========================
+        # GENERATE AI RESPONSE
+        # =========================
+
         llm = LLMEngine()
 
         result = llm.generate(
@@ -86,40 +173,100 @@ async def generate_from_file(
             prompt
         )
 
-        print("RAW AI RESPONSE:")
+        print("\n====================")
+        print("RAW AI RESPONSE")
+        print("====================\n")
+
         print(result)
 
-        # Parse AI JSON response
+        # =========================
+        # CLEAN AI RESPONSE
+        # =========================
+
         cleaned_result = clean_llm_response(
             result
         )
 
-        print("CLEANED AI RESPONSE:")
+        print("\n====================")
+        print("CLEANED AI RESPONSE")
+        print("====================\n")
+
         print(cleaned_result)
+
+        # =========================
+        # PARSE STRUCTURED TEST PLAN
+        # =========================
 
         test_plan = json.loads(
             cleaned_result
         )
 
-        print("STRUCTURED TEST PLAN:")
-        print(test_plan)
+        print("\n====================")
+        print("STRUCTURED TEST PLAN")
+        print("====================\n")
 
-        # Build deterministic JMX
+        print(
+            json.dumps(
+                test_plan,
+                indent=2
+            )
+        )
+
+        # =========================
+        # DAY 12 FOUNDATION:
+        # API DIFF ENGINE
+        # =========================
+
+        previous_apis = None
+
+        if previous_apis:
+
+            changes = compare_apis(
+                previous_apis,
+                parsed_apis
+            )
+
+            print("\n====================")
+            print("API DIFF CHANGES")
+            print("====================\n")
+
+            print(
+                json.dumps(
+                    changes,
+                    indent=2
+                )
+            )
+
+        # =========================
+        # BUILD DETERMINISTIC JMX
+        # =========================
+
         jmx_content = build_jmx(
             test_plan
         )
 
+        print("\n====================")
         print("JMX GENERATED")
+        print("====================\n")
 
-        # Validate generated XML
-        print("GENERATED JMX:")
+        # =========================
+        # VALIDATE GENERATED XML
+        # =========================
+
+        print("\n====================")
+        print("GENERATED JMX")
+        print("====================\n")
+
         print(jmx_content)
 
         validation = validate_xml(
             jmx_content
         )
 
-        print("VALIDATION RESULT:")
+        print("\n====================")
+        print("VALIDATION RESULT")
+        print("====================\n")
+
         print(validation)
 
         if not validation["valid"]:
@@ -129,8 +276,13 @@ async def generate_from_file(
                 "validation": validation
             }
 
-        # Save JMX file
-        output_path = "output/generated_test_plan.jmx"
+        # =========================
+        # SAVE JMX FILE
+        # =========================
+
+        output_path = (
+            "output/generated_test_plan.jmx"
+        )
 
         with open(
             output_path,
@@ -140,18 +292,29 @@ async def generate_from_file(
 
             f.write(jmx_content)
 
+        print("\n====================")
         print("JMX FILE SAVED")
+        print("====================\n")
 
-        # Return downloadable file
+        # =========================
+        # RETURN DOWNLOADABLE FILE
+        # =========================
+
         return FileResponse(
+
             path=output_path,
+
             filename="generated_test_plan.jmx",
+
             media_type="application/xml"
         )
 
     except Exception as e:
 
-        print("ERROR:")
+        print("\n====================")
+        print("ERROR")
+        print("====================\n")
+
         print(str(e))
 
         return {

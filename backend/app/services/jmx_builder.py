@@ -6,7 +6,9 @@ from app.services.jmeter_components import (
     build_test_plan,
     build_thread_group,
     build_cookie_manager,
-    build_csv_dataset
+    build_csv_dataset,
+    build_transaction_controller,
+    build_throughput_controller
 )
 
 from app.services.xml_helpers import (
@@ -45,7 +47,7 @@ jmeter="5.6.3">
 
     xml += "<hashTree>"
 
-    # CSV
+    # CSV DATASET
     xml += build_csv_dataset()
 
     xml += "<hashTree/>"
@@ -55,24 +57,61 @@ jmeter="5.6.3">
 
     xml += "<hashTree/>"
 
-    # REQUESTS
-    for request in test_plan["requests"]:
+    # TRANSACTION LOOP
+    for transaction in test_plan["transactions"]:
 
-        parsed_url = urlparse(
-            request["url"]
+        transaction_name = transaction["name"]
+
+        throughput = transaction.get(
+            "throughput",
+            100
         )
 
-        protocol = parsed_url.scheme
-        domain = parsed_url.netloc
-        path = parsed_url.path
+        requests = transaction["requests"]
 
-        headers = request.get("headers", {})
+        # TRANSACTION CONTROLLER
+        xml += build_transaction_controller(
+            transaction_name
+        )
 
-        body = request.get("body", {})
+        xml += "<hashTree>"
 
-        body_string = json.dumps(body)
+        # THROUGHPUT CONTROLLER
+        xml += build_throughput_controller(
+            throughput
+        )
 
-        xml += f"""
+        xml += "<hashTree>"
+
+        # REQUEST LOOP
+        for request in requests:
+
+            parsed_url = urlparse(
+                request["url"]
+            )
+
+            protocol = parsed_url.scheme
+
+            domain = parsed_url.netloc
+
+            path = parsed_url.path
+
+            headers = request.get(
+                "headers",
+                {}
+            )
+
+            body = request.get(
+                "body",
+                {}
+            )
+
+            body_string = json.dumps(
+                body
+            )
+
+            # HTTP SAMPLER
+            xml += f"""
 <HTTPSamplerProxy guiclass="HttpTestSampleGui"
 testclass="HTTPSamplerProxy"
 testname="{request['name']}"
@@ -119,10 +158,10 @@ elementType="HTTPArgument">
 <hashTree>
 """
 
-        # HEADER MANAGER
-        if headers:
+            # HEADER MANAGER
+            if headers:
 
-            xml += """
+                xml += """
 <HeaderManager guiclass="HeaderPanel"
 testclass="HeaderManager"
 testname="HTTP Header Manager"
@@ -131,9 +170,9 @@ enabled="true">
 <collectionProp name="HeaderManager.headers">
 """
 
-            for key, value in headers.items():
+                for key, value in headers.items():
 
-                xml += f"""
+                    xml += f"""
 <elementProp name=""
 elementType="Header">
 
@@ -144,7 +183,7 @@ elementType="Header">
 </elementProp>
 """
 
-            xml += """
+                xml += """
 </collectionProp>
 
 </HeaderManager>
@@ -152,10 +191,10 @@ elementType="Header">
 <hashTree/>
 """
 
-        # JSON EXTRACTOR
-        if request.get("extract_token"):
+            # JSON TOKEN EXTRACTOR
+            if request.get("extract_token"):
 
-            xml += """
+                xml += """
 <JSONPostProcessor
 guiclass="JSONPostProcessorGui"
 testclass="JSONPostProcessor"
@@ -175,10 +214,10 @@ $.token
 <hashTree/>
 """
 
-        # RESPONSE ASSERTION
-        if request.get("assert_response"):
+            # RESPONSE ASSERTION
+            if request.get("assert_response"):
 
-            xml += """
+                xml += """
 <ResponseAssertion guiclass="AssertionGui"
 testclass="ResponseAssertion"
 testname="Response Assertion"
@@ -207,8 +246,8 @@ false
 <hashTree/>
 """
 
-        # THINK TIME
-        xml += f"""
+            # THINK TIME TIMER
+            xml += f"""
 <ConstantTimer guiclass="ConstantTimerGui"
 testclass="ConstantTimer"
 testname="Think Time"
@@ -224,15 +263,33 @@ enabled="true">
 <hashTree/>
 """
 
+            # CLOSE REQUEST HASHTREE
+            xml += """
+</hashTree>
+"""
+
+        # CLOSE THROUGHPUT CONTROLLER HASHTREE
         xml += """
 </hashTree>
 """
 
+        # CLOSE TRANSACTION CONTROLLER HASHTREE
+        xml += """
+</hashTree>
+"""
+
+    # CLOSE THREAD GROUP HASHTREE
     xml += """
 </hashTree>
+"""
 
+    # CLOSE TEST PLAN HASHTREE
+    xml += """
 </hashTree>
+"""
 
+    # CLOSE ROOT HASHTREE
+    xml += """
 </hashTree>
 
 </jmeterTestPlan>

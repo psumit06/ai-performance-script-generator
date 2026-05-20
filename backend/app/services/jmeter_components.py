@@ -148,3 +148,43 @@ shareMode.all
 
 </CSVDataSet>
 """
+
+def build_transaction_controller(name):
+
+    return f"""
+<TransactionController guiclass="TransactionControllerGui"
+testclass="TransactionController"
+testname="{name}"
+enabled="true">
+
+<boolProp name="TransactionController.includeTimers">
+false
+</boolProp>
+
+<boolProp name="TransactionController.parent">
+false
+</boolProp>
+
+</TransactionController>
+"""
+
+def build_throughput_controller(percent):
+
+    return f"""
+<ThroughputController guiclass="ThroughputControllerGui"
+testclass="ThroughputController"
+testname="Throughput Controller"
+enabled="true">
+
+<intProp name="ThroughputController.style">1</intProp>
+
+<boolProp name="ThroughputController.perThread">
+false
+</boolProp>
+
+<stringProp name="ThroughputController.percentThroughput">
+{percent}
+</stringProp>
+
+</ThroughputController>
+"""
