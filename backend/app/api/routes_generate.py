@@ -14,6 +14,9 @@ from app.services.prompt_engine import build_prompt
 from app.services.llm_engine import LLMEngine
 from app.services.jmx_builder import build_jmx
 from app.services.xml_validator import validate_xml
+from app.services.response_cleaner import (
+    clean_llm_response
+)
 
 router = APIRouter()
 
@@ -87,7 +90,16 @@ async def generate_from_file(
         print(result)
 
         # Parse AI JSON response
-        test_plan = json.loads(result)
+        cleaned_result = clean_llm_response(
+            result
+        )
+
+        print("CLEANED AI RESPONSE:")
+        print(cleaned_result)
+
+        test_plan = json.loads(
+            cleaned_result
+        )
 
         print("STRUCTURED TEST PLAN:")
         print(test_plan)

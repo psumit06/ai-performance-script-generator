@@ -15,7 +15,10 @@ class LLMEngine:
 
     def generate(self, provider, prompt):
 
-        if provider == "gemini":
+        if provider == "github_models":
+            return self._generate_github_models(prompt)
+        
+        elif provider == "gemini":
             return self._generate_gemini(prompt)
 
         elif provider == "openai":
@@ -76,6 +79,33 @@ class LLMEngine:
             }
         ],
         temperature=0.2
+        )
+
+        return response.choices[0].message.content
+    
+    def _generate_github_models(self, prompt):
+
+        client = OpenAI(
+
+            api_key=os.getenv(
+                "GITHUB_MODELS_TOKEN"
+            ),
+
+            base_url="https://models.inference.ai.azure.com"
+        )
+
+        response = client.chat.completions.create(
+
+            model="gpt-4o",
+
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+
+            temperature=0.2
         )
 
         return response.choices[0].message.content
